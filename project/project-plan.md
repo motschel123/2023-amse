@@ -4,13 +4,13 @@
 
 <!-- Describe your data science project in max. 5 sentences. -->
 
-This projects analyzes the correlation between planted trees and speed limits in Berlin.
+This projects aims to analyzes the correlation between planted trees and speed limits in Berlin. The goal is to see if there is a correlation between the two and if so, how strong it is.
 
 ## Rationale
 
 <!-- Outline the impact of the analysis, e.g. which pains it solves. -->
 
-The analysis could influence city planners to incorporate more trees into city design to make it more attractive for citizens, while also reducing the speed of cars.
+The analysis could influence city planners to incorporate more trees into city design to make it more attractive for citizens, while also reducing the speed of cars and making cities more walkable and safe.
 
 ## Datasources
 
@@ -36,5 +36,8 @@ Speed limits in Berlin.
 
 <!-- List of work packages ordered sequentially, each pointing to an issue with more details. -->
 
-1. Example Issue [#1][i1]
-2. TBA
+1. [Automated data pipeline](https://github.com/motschel123/2023-amse/issues/1)
+2. [Automated Tests](https://github.com/motschel123/2023-amse/issues/2)
+3. [Continuous Integration](https://github.com/motschel123/2023-amse/issues/3)
+4. [Data Visualisation](https://github.com/motschel123/2023-amse/issues/5)
+5. [Deployment](https://github.com/motschel123/2023-amse/issues/4)
