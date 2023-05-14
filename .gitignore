@@ -1,0 +1,6 @@
+.flake8
+.DS_Store
+
+# ignore all files in the data directory except for Python files
+data/*
+!data/*.py

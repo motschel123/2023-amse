@@ -19,7 +19,7 @@ The analysis could influence city planners to incorporate more trees into city d
 ### Datasource 1: Baumbestand Berlin - Anlagenbäume - Sachdaten zur Karte - [WFS]
 
 - Metadata URL: https://mobilithek.info/offers/-2595349091973956532
-- Data URL: TBA
+- Data URL: https://fbinter.stadt-berlin.de/fb/wfs/data/senstadt/s_wfs_baumbestand_an
 - Data Type: WFS_SRVC
 
 Planted trees in Berlin.
@@ -27,7 +27,7 @@ Planted trees in Berlin.
 ### Datasource 1: Tempolimits - [WFS]
 
 - Metadata URL: https://mobilithek.info/offers/-8613064499673471355
-- Data URL: TBA
+- Data URL: https://fbinter.stadt-berlin.de/fb/wfs/data/senstadt/s_vms_tempolimits_spatial
 - Data Type: WFS_SRVC
 
 Speed limits in Berlin.
