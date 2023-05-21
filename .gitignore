@@ -5,3 +5,7 @@
 # ignore all files in the data directory except for Python files
 data/*
 !data/*.py
+
+exercises/*
+!exercises/*.py
+!exercises/*.jv
