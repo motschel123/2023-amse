@@ -1,5 +1,6 @@
 .flake8
 .DS_Store
+.vscode
 
 # ignore all files in the data directory except for Python files
 data/*
