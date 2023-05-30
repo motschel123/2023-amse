@@ -5,6 +5,7 @@
 # ignore all files in the data directory except for Python files
 data/*
 !data/*.py
+!data/*.sh
 
 exercises/*
 !exercises/*.py
