@@ -1,4 +1,5 @@
 #! /bin/bash
 
-cd ../data
+
+cd "$(git rev-parse --show-toplevel)"/data
 pytest test.py
