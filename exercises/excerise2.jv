@@ -33,13 +33,6 @@ valuetype IFOPT oftype text {
 
 
 pipeline TrainstopsPipeline {
-    TrainstopsExtractor 
-        -> TrainstopsTextFileInterpreter
-        -> TrainstopsCsvInterpreter
-        -> TrainstopsTableInterpreter
-        -> TrainstopsSQLiteLoader;
-
-
     block TrainstopsExtractor oftype HttpExtractor {
         url: "https://download-data.deutschebahn.com/static/datasets/haltestellen/D_Bahnhof_2020_alle.CSV";
     }
@@ -68,7 +61,13 @@ pipeline TrainstopsPipeline {
     }
 
     block TrainstopsSQLiteLoader oftype SQLiteLoader {
-        table: "trainstops";
-        file: "trainstops.sqlite";
-    }
+		table: "trainstops";
+		file: "trainstops.sqlite";
+	}
+
+    TrainstopsExtractor 
+        -> TrainstopsTextFileInterpreter
+        -> TrainstopsCsvInterpreter
+        -> TrainstopsTableInterpreter
+        -> TrainstopsSQLiteLoader;
 }
