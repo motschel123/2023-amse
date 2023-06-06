@@ -6,7 +6,10 @@
 data/*
 !data/*.py
 !data/*.sh
-
+# ignore all files in the exercises directory except for Python and jayvee files
 exercises/*
 !exercises/*.py
 !exercises/*.jv
+# ignore data files from exploration notebook
+*.geojson
+*.json

@@ -1,0 +1,4 @@
+requests==2.31.0
+geopandas==0.13.2
+Rtree==1.0.1
+ipykernel==6.15.0
