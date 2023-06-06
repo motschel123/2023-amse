@@ -106,7 +106,9 @@ def get_data(dataset_name) -> gpd.GeoDataFrame:
     return gdf
 
 
-def map_tree_to_street(trees_gdf, streets_gdf):
+def map_tree_to_street(
+    trees_gdf, streets_gdf
+) -> tuple(gpd.GeoDataFrame, gpd.GeoDataFrame):
     def store_tree_to_street_map(tree_id_street_id_map):
         with open("tree_id_street_id_map.json", "w") as f:
             json.dump(tree_id_street_id_map, f)
@@ -167,7 +169,9 @@ def map_tree_to_street(trees_gdf, streets_gdf):
 
     store_tree_to_street_map(tree_id_street_id_map)
 
-    return tree_id_street_id_map
+    trees_gdf["street_id"] = trees_gdf["id"].map(tree_id_street_id_map)
+
+    return trees_gdf, streets_gdf
 
 
 def store_in_db(trees_gdf, streets_gdf, tree_id_street_id_map):
@@ -192,7 +196,6 @@ streets = get_data("streets")
 streets = streets.to_crs(trees.crs)
 
 # Create a map of tree id to street id
-tree_id_to_street_id_map = map_tree_to_street(trees, streets)
+trees, streets = map_tree_to_street(trees, streets)
 
-
-store_in_db(trees, streets, tree_id_to_street_id_map)
+store_in_db(trees, streets)
