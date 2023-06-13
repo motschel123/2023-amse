@@ -108,7 +108,7 @@ def get_data(dataset_name) -> gpd.GeoDataFrame:
 
 def map_tree_to_street(
     trees_gdf, streets_gdf
-) -> tuple(gpd.GeoDataFrame, gpd.GeoDataFrame):
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     def store_tree_to_street_map(tree_id_street_id_map):
         with open("tree_id_street_id_map.json", "w") as f:
             json.dump(tree_id_street_id_map, f)
