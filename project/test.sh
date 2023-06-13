@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# extract the current directory name
+current_dir=${PWD##*/}
+
 if [ "$current_dir" == "project" ]
 then
     # if current directory is 'project', go to '../data'
