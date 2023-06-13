@@ -14,6 +14,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: main
+          fetch-depth: "0"
 
       # Install python
       - name: Set up Python 3.11
