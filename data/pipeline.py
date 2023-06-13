@@ -95,7 +95,8 @@ def get_data(dataset_name) -> gpd.GeoDataFrame:
 
     if CONFIG["use_cached"]:
         try:
-            return gpd.read_file(f"{dataset_name}.geojson")
+            with open(f"{dataset_name}.geojson", "r") as f:
+                return gpd.read_file(f)
         except FileNotFoundError:
             pass
 
@@ -169,20 +170,15 @@ def map_tree_to_street(
 
     store_tree_to_street_map(tree_id_street_id_map)
 
-    trees_gdf["street_id"] = trees_gdf["id"].map(tree_id_street_id_map)
-
-    return trees_gdf, streets_gdf
+    return tree_id_street_id_map
 
 
-def store_in_db(trees_gdf, streets_gdf, tree_id_street_id_map):
+def store_in_db(trees_gdf, streets_gdf):
     def store_without_geometry(gdf, table_name):
         print(f"Storing {table_name} without geometry...")
         gdf_no_geoms = gdf.drop(columns=["geometry"])
         with sqlite3.connect(CONFIG["db_path"]) as conn:
             gdf_no_geoms.to_sql(table_name, conn, if_exists="replace", index=False)
-
-    # Add the street id to the trees
-    trees_gdf["street_id"] = trees_gdf["id"].map(tree_id_street_id_map)
 
     store_without_geometry(trees_gdf, "trees")
     store_without_geometry(streets_gdf, "streets")
@@ -196,6 +192,8 @@ streets = get_data("streets")
 streets = streets.to_crs(trees.crs)
 
 # Create a map of tree id to street id
-trees, streets = map_tree_to_street(trees, streets)
+tree_id_street_id_map = map_tree_to_street(trees, streets)
+
+trees["street_id"] = trees["id"].map(tree_id_street_id_map)
 
 store_in_db(trees, streets)
