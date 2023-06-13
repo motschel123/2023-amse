@@ -29,6 +29,6 @@ jobs:
 
       # Run test script
       - name: Test the project
-        working-directory: ./main/project
+        working-directory: ./main
         run: |
-          ./test.sh
+          ./project/test.sh
