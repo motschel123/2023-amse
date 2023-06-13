@@ -30,4 +30,4 @@ jobs:
       # Run test script
       - name: Test the project
         run: |
-          ./main/project/tests.sh
+          ./main/project/test.sh
