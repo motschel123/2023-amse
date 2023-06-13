@@ -7,4 +7,6 @@ then
 else
     # if not, go to './data'
     cd ./data
+fi
+
 pytest test.py
