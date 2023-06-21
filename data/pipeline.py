@@ -27,7 +27,9 @@ DATASET_INFO = {
 }
 
 
-def get_data(dataset_name) -> gpd.GeoDataFrame:
+def get_data(
+    dataset_name, CONFIG=CONFIG, DATASET_INFO=DATASET_INFO
+) -> gpd.GeoDataFrame:
     def confirm_typename(wfs_url, expected_typename):
         # Define the parameters for the GetCapabilities request
         params = {"service": "WFS", "version": "2.0.0", "request": "GetCapabilities"}
@@ -102,8 +104,9 @@ def get_data(dataset_name) -> gpd.GeoDataFrame:
 
     gdf = get_data_for_typename(wfs_url, expected_typename)
 
+    gdf.to_crs(epsg=4326, inplace=True)
     gdf.to_file(f"{dataset_name}.geojson", driver="GeoJSON")
-
+    assert gdf.crs.to_epsg() == 4326
     return gdf
 
 
@@ -184,16 +187,17 @@ def store_in_db(trees_gdf, streets_gdf):
     store_without_geometry(streets_gdf, "streets")
 
 
-# Load the data
-trees = get_data("trees")
-streets = get_data("streets")
+if __name__ == "__main__":
+    # Load the data
+    trees = get_data("trees")
+    streets = get_data("streets")
 
-# Ensure both GeoDataFrames use the same CRS
-streets = streets.to_crs(trees.crs)
+    # Ensure both GeoDataFrames use the same CRS
+    streets = streets.to_crs(trees.crs)
 
-# Create a map of tree id to street id
-tree_id_street_id_map = map_tree_to_street(trees, streets)
+    # Create a map of tree id to street id
+    tree_id_street_id_map = map_tree_to_street(trees, streets)
 
-trees["street_id"] = trees["id"].map(tree_id_street_id_map)
+    trees["street_id"] = trees["id"].map(tree_id_street_id_map)
 
-store_in_db(trees, streets)
+    store_in_db(trees, streets)
