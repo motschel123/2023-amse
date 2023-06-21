@@ -13,3 +13,4 @@ exercises/*
 # ignore data files from exploration notebook
 *.geojson
 *.json
+*.db
