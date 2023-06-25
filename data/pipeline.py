@@ -12,7 +12,7 @@ CONFIG = {
     "use_cached": True,
     "max_distance_to_street": 5,
     "db_path": "data.db",
-    "spatialite_path": "/opt/homebrew/lib/mod_spatialite.dylib",
+    "espg": 4326,
 }
 
 DATASET_INFO = {
@@ -104,13 +104,17 @@ def get_data(
 
     gdf = get_data_for_typename(wfs_url, expected_typename)
 
-    gdf.to_crs(epsg=4326, inplace=True)
-    gdf.to_file(f"{dataset_name}.geojson", driver="GeoJSON")
-    assert gdf.crs.to_epsg() == 4326
+    gdf.to_crs(epsg=CONFIG["espg"], inplace=True)
+    assert gdf.crs.to_epsg() == CONFIG["espg"]
     return gdf
 
-
-def map_tree_to_street(
+def clean_data(trees_gdf, streets_gdf):
+    trees_gdf = trees_gdf.loc[:, ["id", "gattung", "gattung_deutsch", "geometry"]]
+    streets_gdf = streets_gdf.loc[:, ["id", "wert_ves", "geometry"]]
+    return trees_gdf, streets_gdf
+    
+    
+def get_tree_to_street_map(
     trees_gdf, streets_gdf
 ) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     def store_tree_to_street_map(tree_id_street_id_map):
@@ -191,13 +195,22 @@ if __name__ == "__main__":
     # Load the data
     trees = get_data("trees")
     streets = get_data("streets")
-
-    # Ensure both GeoDataFrames use the same CRS
-    streets = streets.to_crs(trees.crs)
+    # Clean the data
+    trees, streets = clean_data(trees, streets)
+    # Store the data
+    trees.to_file("trees.geojson", driver="GeoJSON")
+    streets.to_file("streets.geojson", driver="GeoJSON")
 
     # Create a map of tree id to street id
-    tree_id_street_id_map = map_tree_to_street(trees, streets)
+    tree_id_street_id_map = get_tree_to_street_map(trees, streets)
 
+    # Udapte the trees dataframe to include the street id and speed limit
     trees["street_id"] = trees["id"].map(tree_id_street_id_map)
+    trees.dropna(subset=["street_id"], inplace=True)
+    trees["street_speed_limit"] = trees["street_id"].map(streets.set_index("id")["wert_ves"])    
 
+    # Updated the trees file to include the street id and speed limit
+    trees.to_file("trees.geojson", driver="GeoJSON")
+    
+    # Store the data in a database
     store_in_db(trees, streets)
