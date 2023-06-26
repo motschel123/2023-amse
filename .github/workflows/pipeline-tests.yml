@@ -27,8 +27,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r ./main/requirements.txt
 
+      # Updated test script is to expensive to run on every push
       # Run test script
-      - name: Test the project
-        run: |
-          cd ./main/project
-          ./test.sh
+      # - name: Test the project
+      #   run: |
+      #     cd ./main/project
+      #     ./test.sh

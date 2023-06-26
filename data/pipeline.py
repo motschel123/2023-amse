@@ -1,6 +1,7 @@
 import requests
 from xml.etree import ElementTree as ET
 import geopandas as gpd
+import pandas as pd
 import io
 from rtree import index
 import json
@@ -11,16 +12,20 @@ import sqlite3
 CONFIG = {
     "use_cached": True,
     "max_distance_to_street": 5,
-    "db_path": "data.db",
-    "espg": 4326,
+    "epsg": 4326,
+    "equidistant_epsg": 32633,
 }
 
 DATASET_INFO = {
     "trees": {
-        "wfs_url": "https://fbinter.stadt-berlin.de/fb/wfs/data/senstadt/s_wfs_baumbestand_an",
-        "expected_typename": "fis:s_wfs_baumbestand_an",
+        "wfs_url": "https://fbinter.stadt-berlin.de/fb/wfs/data/senstadt/s_wfs_baumbestand",
+        "expected_typename": "fis:s_wfs_baumbestand",
     },
     "streets": {
+        "wfs_url": "https://fbinter.stadt-berlin.de/fb/wfs/data/senstadt/s_vms_detailnetz_spatial_gesamt",
+        "expected_typename": "fis:s_vms_detailnetz_spatial_gesamt",
+    },
+    "speed_limits": {
         "wfs_url": "https://fbinter.stadt-berlin.de/fb/wfs/data/senstadt/s_vms_tempolimits_spatial",
         "expected_typename": "fis:s_vms_tempolimits_spatial",
     },
@@ -104,14 +109,31 @@ def get_data(
 
     gdf = get_data_for_typename(wfs_url, expected_typename)
 
-    gdf.to_crs(epsg=CONFIG["espg"], inplace=True)
-    assert gdf.crs.to_epsg() == CONFIG["espg"]
+    gdf.to_crs(epsg=CONFIG["epsg"], inplace=True)
+    assert gdf.crs.to_epsg() == CONFIG["epsg"]
     return gdf
 
-def clean_data(trees_gdf, streets_gdf):
-    trees_gdf = trees_gdf.loc[:, ["id", "gattung", "gattung_deutsch", "geometry"]]
-    streets_gdf = streets_gdf.loc[:, ["id", "wert_ves", "geometry"]]
-    return trees_gdf, streets_gdf
+
+def clean_data(trees_gdf, streets_gdf, speed_limits_gdf) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    # Remove all streets that are not relevant for the analysis
+    # (F)ußwege, (P)rivatstraßen, (W)aldwege, (N)icht-Klassifizierte Straßen, Radwege, (X) Fuß+Radwege,  (Z) Fußgängerzone, (Y) Planung, (Q) Straßenquerung
+    irrelevant_street_types = ['F', 'P', 'W', 'N', 'R', 'X', 'Z', 'Y', 'Q']
+    streets_gdf = streets_gdf[~streets_gdf['strassenklasse'].isin(irrelevant_street_types)]
+    
+    # Select only relevant columns
+    trees_gdf = trees.dropna(subset=["strname"])
+    trees_gdf = trees_gdf.loc[:, ["id", "strname", "gattung", "gattung_deutsch", "geometry"]]
+    speed_limits_gdf = speed_limits_gdf.rename(columns={"wert_ves": "speed_limit"})
+    speed_limits_gdf = speed_limits_gdf.loc[:, ["id", "elem_nr", "speed_limit", "geometry"]]
+    streets_gdf = streets_gdf.rename(columns={"element_nr": "elem_nr"})
+    streets_gdf = streets_gdf.loc[:, ["id", "strassenname", "strassenklasse", "elem_nr", "geometry"]]
+    
+    # make speed_limits_gdf["elem_nr"] unique
+    # Remove all duplicated rows in speed_limits_gdf (streets can have multiple speed limits, but to keep it simple we only use the first one)
+    speed_limits_gdf = speed_limits_gdf[~speed_limits_gdf["elem_nr"].duplicated(keep="last")]
+    assert speed_limits_gdf["elem_nr"].is_unique
+    
+    return trees_gdf, streets_gdf, speed_limits_gdf
     
     
 def get_tree_to_street_map(
@@ -180,37 +202,42 @@ def get_tree_to_street_map(
     return tree_id_street_id_map
 
 
-def store_in_db(trees_gdf, streets_gdf):
-    def store_without_geometry(gdf, table_name):
-        print(f"Storing {table_name} without geometry...")
-        gdf_no_geoms = gdf.drop(columns=["geometry"])
-        with sqlite3.connect(CONFIG["db_path"]) as conn:
-            gdf_no_geoms.to_sql(table_name, conn, if_exists="replace", index=False)
-
-    store_without_geometry(trees_gdf, "trees")
-    store_without_geometry(streets_gdf, "streets")
-
-
 if __name__ == "__main__":
     # Load the data
     trees = get_data("trees")
     streets = get_data("streets")
+    speed_limits = get_data("speed_limits")
+    
     # Clean the data
-    trees, streets = clean_data(trees, streets)
+    trees, streets, speed_limits = clean_data(trees, streets, speed_limits)
+    
     # Store the data
     trees.to_file("trees.geojson", driver="GeoJSON")
     streets.to_file("streets.geojson", driver="GeoJSON")
+    speed_limits.to_file("speed_limits.geojson", driver="GeoJSON")
 
+    # Merge streets and speed_limits
+    streets["speed_limit"] = streets["elem_nr"].map(speed_limits.set_index("elem_nr")["speed_limit"]).fillna(50.0)
+    # Update streets.geojson with speed limits
+    streets.to_file("streets.geojson", driver="GeoJSON")
+    
+    # Merge streets and trees
+    merged_data = pd.merge(streets, trees.drop(columns="geometry"), left_on="strassenname", right_on="strname", how="inner")
+    # merged_data = (
+    #     streets.to_crs(epsg=CONFIG["equidistant_epsg"])
+    #     .sjoin_nearest(trees.to_crs(epsg=CONFIG["equidistant_epsg"]), how="left", distance_col="distance")#, max_distance=CONFIG["max_distance_to_street"])
+    # ).to_crs(epsg=CONFIG["epsg"])
+    
+    merged_data.to_file("merged_data.geojson", driver="GeoJSON")
+    
     # Create a map of tree id to street id
-    tree_id_street_id_map = get_tree_to_street_map(trees, streets)
+    # tree_id_street_id_map = get_tree_to_street_map(trees, streets)
 
     # Udapte the trees dataframe to include the street id and speed limit
-    trees["street_id"] = trees["id"].map(tree_id_street_id_map)
-    trees.dropna(subset=["street_id"], inplace=True)
-    trees["street_speed_limit"] = trees["street_id"].map(streets.set_index("id")["wert_ves"])    
-
-    # Updated the trees file to include the street id and speed limit
-    trees.to_file("trees.geojson", driver="GeoJSON")
+    # trees["street_id"] = trees["id"].map(tree_id_street_id_map)
+    # trees.dropna(subset=["street_id"], inplace=True)
     
-    # Store the data in a database
-    store_in_db(trees, streets)
+    # Merge treea and streets for easier analysis
+    # merged_gdf = pd.merge(streets, trees.drop(columns="geometry"), left_on="id", right_on="street_id", how="inner")
+
+    # merged_gdf.to_file("merged_data.geojson", driver="GeoJSON")
