@@ -16,10 +16,10 @@ The analysis could influence city planners to incorporate more trees into city d
 
 <!-- Describe each datasources you plan to use in a section. Use the prefic "DatasourceX" where X is the id of the datasource. -->
 
-### Datasource 1: Baumbestand Berlin - Anlagenbäume - Sachdaten zur Karte - [WFS]
+### Datasource 1: Baumbestand Berlin - Straßenbäume - Sachdaten zur Karte - [WFS]
 
-- Metadata URL: https://mobilithek.info/offers/-2595349091973956532
-- Data URL: https://fbinter.stadt-berlin.de/fb/wfs/data/senstadt/s_wfs_baumbestand_an
+- Metadata URL: https://mobilithek.info/offers/-5687470862699743129
+- Data URL: https://fbinter.stadt-berlin.de/fb/wfs/data/senstadt/s_wfs_baumbestand
 - Data Type: WFS_SRVC
 
 Planted trees in Berlin.

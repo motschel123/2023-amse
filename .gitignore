@@ -14,5 +14,6 @@ exercises/*
 *.geojson
 *.json
 *.db
+*.pkl
 
 .pytest_cache
