@@ -1,0 +1,12 @@
+requests==2.31.0
+geopandas==0.13.2
+ipykernel==6.15.0
+pytest==7.3.2
+sqlalchemy==2.0.16
+matplotlib==3.7.1
+folium==0.14.0
+mapclassify==2.5.0
+ipywidgets==8.0.6
+plotly==5.15.0
+nbformat==5.9.0
+seaborn==0.12.2
